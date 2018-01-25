@@ -1,2 +1,3 @@
-# Lab1_CS327E
+# Kapetanakis_Saenz_CS327E
+
 Stefanos Kapetanakis - sk35337
