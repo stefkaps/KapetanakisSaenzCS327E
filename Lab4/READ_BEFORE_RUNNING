@@ -1,0 +1,5 @@
+If you're going to run the given files, be sure you run in the following order:
+
+Create_host.sql -> create_calendar_summary.sql -> update_listings.sql
+
+Also you may have to update the "update_listings.sql" file as part of the second half
