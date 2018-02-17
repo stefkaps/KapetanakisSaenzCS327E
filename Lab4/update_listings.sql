@@ -21,7 +21,7 @@ ALTER TABLE Listings ADD FOREIGN KEY (neighborhood, zipcode) REFERENCES Neighbor
 
 ALTER TABLE Summary_Listings RENAME COLUMN neighbourhood TO zipcode;
 
-SELECT split_part(street, ',', 1) as street FROM Listings;
+UPDATE Listings SET street = split_part(street, ',', 1)
 
 UPDATE Listings SET price = REPLACE(price, ',', '');
 UPDATE Listings SET price = REPLACE(price, '$', '');
