@@ -1,4 +1,4 @@
-create table Amenity qas(
+create table Amenity as(
    SELECT DISTINCT listing_id, amenities FROM Listing
 );
 
