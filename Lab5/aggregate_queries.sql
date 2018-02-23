@@ -6,4 +6,10 @@ FROM Listing l LEFT OUTER JOIN Review r ON l.id = r.listing_id
 GROUP BY r.comments
 ORDER BY avg(price) desc;
 
+#Lists airbnb listings id that have the lowest price by zipcode, and orders the results by price highest to lowest.
+SELECT min(price), id, zipcode
+FROM Listing
+GROUP BY zipcode
+ORDER BY min(price) desc;
+
 #
