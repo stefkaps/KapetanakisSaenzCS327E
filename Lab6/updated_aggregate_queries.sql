@@ -31,7 +31,7 @@ WHERE cs.availability_30 > 5
 GROUP BY l.host_id;
 
 #Averages the number of reviews by city per listing
-SELECT avg(number_of_reviews) 
+SELECT avg(number_of_reviews), city
 FROM Listing 
 WHERE number_of_reviews > 0 
 GROUP BY city;
