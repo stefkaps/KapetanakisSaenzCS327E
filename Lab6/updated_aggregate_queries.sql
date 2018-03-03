@@ -4,7 +4,7 @@
 SELECT avg(l.price), r.reviewer_name, r.comments, l.id
 FROM Listing l LEFT OUTER JOIN Review r ON l.id = r.listing_id
 GROUP BY r.comments r.reviewer_name, l.id
-ORDER BY avg(price);
+ORDER BY avg(listing.price);
 
 #Lists airbnb listings id that have the lowest price by zipcode, and orders the results by price highest to lowest.
 SELECT min(price), id, zipcode
