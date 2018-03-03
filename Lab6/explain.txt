@@ -1,0 +1,268 @@
+EXPLANATIONS
+
+QUERY 1 w/o index: 3005 ms w/index: 2767 ms
+
+WITHOUT
+-------
+
+airbnb=> explain analyze SELECT avg(l.price), r.reviewer_name, r.comments, l.id
+airbnb-> FROM Listing l LEFT OUTER JOIN Review r ON l.id = r.listing_id
+airbnb-> GROUP BY r.comments, r.reviewer_name, l.id
+airbnb-> ORDER BY avg(price);
+                                                                         QUERY PLAN                                     
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=10000099736.99..10000100073.36 rows=134550 width=395) (actual time=2843.543..2961.621 rows=138172 loops=1)
+   Sort Key: (avg(l.price))
+   Sort Method: external merge  Disk: 46880kB
+   ->  GroupAggregate  (cost=10000059860.82..10000063897.32 rows=134550 width=395) (actual time=1470.476..2509.602 rows=138172 loops=1)
+         Group Key: r.comments, r.reviewer_name, l.id
+         ->  Sort  (cost=10000059860.82..10000060197.19 rows=134550 width=335) (actual time=1470.460..2365.913 rows=138206 loops=1)
+               Sort Key: r.comments, r.reviewer_name, l.id
+               Sort Method: external merge  Disk: 46216kB
+               ->  Hash Right Join  (cost=10000018220.59..10000027703.15 rows=134550 width=335) (actual time=27.088..111.608 rows=138206 loops=1)
+                     Hash Cond: (r.listing_id = l.id)
+                     ->  Seq Scan on review r  (cost=10000000000.00..10000007632.50 rows=134550 width=331) (actual time=0.013..19.678 rows=134550 loops=1)
+                     ->  Hash  (cost=18099.80..18099.80 rows=9663 width=8) (actual time=27.027..27.027 rows=9663 loops=1)
+                           Buckets: 16384  Batches: 1  Memory Usage: 544kB
+                           ->  Index Scan using idindex on listing l  (cost=0.29..18099.80 rows=9663 width=8) (actual time=0.009..24.674 rows=9663 loops=1)
+ Planning time: 0.229 ms
+ Execution time: 3005.131 ms
+(16 rows)
+
+WITH
+-------
+airbnb=> explain analyze SELECT avg(l.price), r.reviewer_name, r.comments, l.id
+airbnb-> FROM Listing l LEFT OUTER JOIN Review r ON l.id = r.listing_id
+airbnb-> GROUP BY r.comments, r.reviewer_name, l.id
+airbnb-> ORDER BY avg(price);
+                                                                            QUERY PLAN                                  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=120490.95..120827.32 rows=134550 width=395) (actual time=2583.395..2721.970 rows=138172 loops=1)
+   Sort Key: (avg(l.price))
+   Sort Method: external merge  Disk: 46880kB
+   ->  GroupAggregate  (cost=80614.78..84651.28 rows=134550 width=395) (actual time=1334.597..2253.818 rows=138172 loops=1)
+         Group Key: r.comments, r.reviewer_name, l.id
+         ->  Sort  (cost=80614.78..80951.15 rows=134550 width=335) (actual time=1334.580..2129.507 rows=138206 loops=1)
+               Sort Key: r.comments, r.reviewer_name, l.id
+               Sort Method: external merge  Disk: 46216kB
+               ->  Merge Left Join  (cost=0.71..48457.11 rows=134550 width=335) (actual time=0.020..122.385 rows=138206 loops=1)
+                     Merge Cond: (l.id = r.listing_id)
+                     ->  Index Scan using idindex on listing l  (cost=0.29..18099.80 rows=9663 width=8) (actual time=0.012..24.630 rows=9663 loops=1)
+                     ->  Index Scan using revlistingindex on review r  (cost=0.42..28651.28 rows=134550 width=331) (actual time=0.006..59.739 rows=134550 loops=1)
+ Planning time: 0.517 ms
+ Execution time: 2767.219 ms
+(14 rows)
+
+
+
+
+QUERY 2 w/o index: 56 ms w/index: 35 ms
+
+WITHOUT
+-------
+airbnb=> explain analyze SELECt min(price), id, zipcode
+airbnb-> FROM Listing
+airbnb-> GROUP BY zipcode, id
+airbnb-> ORDER BY min(price) desc;
+                                                               QUERY PLAN                                               
+-----------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=18884.35..18908.51 rows=9663 width=41) (actual time=54.146..55.623 rows=9663 loops=1)
+   Sort Key: (min(price)) DESC
+   Sort Method: quicksort  Memory: 1136kB
+   ->  GroupAggregate  (cost=0.29..18244.74 rows=9663 width=41) (actual time=0.033..48.880 rows=9663 loops=1)
+         Group Key: id
+         ->  Index Scan using idindex on listing  (cost=0.29..18099.80 rows=9663 width=13) (actual time=0.025..34.988 rows=9663 loops=1)
+ Planning time: 0.283 ms
+ Execution time: 56.249 ms
+(8 rows)
+
+WITH
+-------
+airbnb=> explain analyze SELECt min(price), id, zipcode
+airbnb-> FROM Listing
+airbnb-> GROUP BY zipcode, id
+airbnb-> ORDER BY min(price) desc;
+                                                               QUERY PLAN                                               
+-----------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=18884.35..18908.51 rows=9663 width=41) (actual time=33.000..34.079 rows=9663 loops=1)
+   Sort Key: (min(price)) DESC
+   Sort Method: quicksort  Memory: 1136kB
+   ->  GroupAggregate  (cost=0.29..18244.74 rows=9663 width=41) (actual time=0.027..27.853 rows=9663 loops=1)
+         Group Key: id
+         ->  Index Scan using idindex on listing  (cost=0.29..18099.80 rows=9663 width=13) (actual time=0.017..22.847 rows=9663 loops=1)
+ Planning time: 0.311 ms
+ Execution time: 34.677 ms
+(8 rows)
+
+
+
+QUERY 3 w/o index: 35 ms w/index: ms
+
+WITHOUT
+-------
+
+airbnb=> explain analyze SELECT avg(h.response_rate), l.host_id
+airbnb-> FROM Host h JOIN Listing l ON l.host_id = h.id
+airbnb-> GROUP BY l.state, l.host_id
+airbnb-> HAVING avg(h.response_rate) <75;
+                                                                  QUERY PLAN                                            
+-----------------------------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=23229.72..23342.10 rows=7492 width=38) (actual time=34.594..34.594 rows=0 loops=1)
+   Group Key: l.state, l.host_id
+   Filter: (avg(h.response_rate) < '75'::numeric)
+   Rows Removed by Filter: 7492
+   ->  Merge Join  (cost=0.57..23133.09 rows=9663 width=38) (actual time=0.047..28.103 rows=9663 loops=1)
+         Merge Cond: (h.id = l.host_id)
+         ->  Index Scan using host_pkey on host h  (cost=0.28..4883.59 rows=7492 width=36) (actual time=0.008..4.929 rows=7492 loops=1)
+         ->  Index Scan using host_idindex on listing l  (cost=0.29..18109.98 rows=9663 width=6) (actual time=0.008..19.227 rows=9663 loops=1)
+ Planning time: 0.490 ms 
+ Execution time: 78.808 ms
+(10 rows)
+
+WITH
+-------
+airbnb=> explain analyze SELECT avg(h.response_rate), l.host_id
+airbnb-> FROM Host h JOIN Listing l ON l.host_id = h.id
+airbnb-> GROUP BY l.state, l.host_id
+airbnb-> HAVING avg(h.response_rate) <75;
+                                                                   QUERY PLAN                                           
+------------------------------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=23073.72..23186.10 rows=7492 width=38) (actual time=78.713..78.713 rows=0 loops=1)
+   Group Key: l.state, l.host_id
+   Filter: (avg(h.response_rate) < '75'::numeric)
+   Rows Removed by Filter: 7492
+   ->  Merge Join  (cost=0.57..22977.09 rows=9663 width=38) (actual time=0.015..65.499 rows=9663 loops=1)
+         Merge Cond: (h.id = l.host_id)
+         ->  Index Scan using hosttableidindex on host h  (cost=0.28..4727.59 rows=7492 width=36) (actual time=0.008..13.040 rows=7492 loops=1)
+         ->  Index Scan using hostidindex on listing l  (cost=0.29..18109.98 rows=9663 width=6) (actual time=0.004..40.820 rows=9663 loops=1)
+ Planning time: 0.318 ms
+ Execution time: 34.691 ms
+(10 rows)
+
+
+QUERY 4 w/o index: 2205 ms w/index: 2195 ms
+
+WITHOUT
+-------
+airbnb=> explain analyze SELECT c.date1, sum(l.price)
+airbnb-> FROM Calendar c JOIN Listing l ON c.listing_id = l.id
+airbnb-> GROUP BY c.date1
+airbnb-> HAVING sum(l.price) > 0;
+                                                                         QUERY PLAN                                     
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=180325.11..180330.60 rows=366 width=36) (actual time=2205.424..2205.511 rows=366 loops=1)
+   Group Key: c.date1
+   Filter: (sum(l.price) > '0'::numeric)
+   ->  Merge Join  (cost=0.72..153872.65 rows=3526995 width=8) (actual time=0.058..1119.144 rows=3526995 loops=1)
+         Merge Cond: (l.id = c.listing_id)
+         ->  Index Scan using listings_pkey on listing l  (cost=0.29..18203.80 rows=9663 width=8) (actual time=0.015..34.861 rows=9663 loops=1)
+         ->  Index Only Scan using calendar_pkey on calendar c  (cost=0.43..91597.36 rows=3526995 width=8) (actual time=0.037..471.610 rows=3526995 loops=1)
+               Heap Fetches: 0
+ Planning time: 0.557 ms
+ Execution time: 2205.691 ms
+(10 rows)
+
+WITH
+------
+airbnb=> explain analyze SELECT c.date1, sum(l.price)
+airbnb-> FROM Calendar c JOIN Listing l ON c.listing_id = l.id
+airbnb-> GROUP BY c.date1
+airbnb-> HAVING sum(l.price) > 0;
+                                                                         QUERY PLAN                                     
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=180221.11..180226.60 rows=366 width=36) (actual time=2195.727..2195.807 rows=366 loops=1)
+   Group Key: c.date1
+   Filter: (sum(l.price) > '0'::numeric)
+   ->  Merge Join  (cost=0.72..153768.65 rows=3526995 width=8) (actual time=0.037..1107.214 rows=3526995 loops=1)
+         Merge Cond: (l.id = c.listing_id)
+         ->  Index Scan using idindex on listing l  (cost=0.29..18099.80 rows=9663 width=8) (actual time=0.012..32.997 rows=9663 loops=1)
+         ->  Index Only Scan using calendar_pkey on calendar c  (cost=0.43..91597.36 rows=3526995 width=8) (actual time=0.022..464.469 rows=3526995 loops=1)
+               Heap Fetches: 0
+ Planning time: 0.427 ms
+ Execution time: 2195.903 ms
+(10 rows)
+
+
+
+QUERY 5 w/o index: 101 ms w/index: 37 ms
+
+WITHOUT
+-------
+airbnb=> explain analyze SELECT l.host_id, avg(cs.availability_30)
+airbnb-> FROM Calendar_summary cs JOIN Listing l ON cs.listing_id = l.id
+airbnb-> WHERE cs.availability_30 > 5
+airbnb-> GROUP BY l.host_id;
+                                                                           QUERY PLAN                                   
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=17296.18..17373.62 rows=6195 width=36) (actual time=97.549..101.057 rows=4693 loops=1)
+   Group Key: l.host_id
+   ->  Nested Loop  (cost=0.57..17265.20 rows=6195 width=8) (actual time=0.952..91.960 rows=6195 loops=1)
+         ->  Index Scan using calendar_summary_pkey on calendar_summary cs  (cost=0.29..581.27 rows=6195 width=8) (actual time=0.937..59.541 rows=6195 loops=1)
+               Filter: (availability_30 > 5)
+               Rows Removed by Filter: 3468
+         ->  Index Scan using idindex on listing l  (cost=0.29..2.68 rows=1 width=8) (actual time=0.004..0.005 rows=1 loops=6195)
+               Index Cond: (id = cs.listing_id)
+ Planning time: 17.378 ms
+ Execution time: 101.526 ms
+(10 rows)
+
+WITH
+-------
+airbnb=> explain analyze SELECT l.host_id, avg(cs.availability_30)
+airbnb-> FROM Calendar_summary cs JOIN Listing l ON cs.listing_id = l.id
+airbnb-> WHERE cs.availability_30 > 5
+airbnb-> GROUP BY l.host_id;
+                                                                          QUERY PLAN                                    
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=17296.18..17373.62 rows=6195 width=36) (actual time=34.288..37.059 rows=4693 loops=1)
+   Group Key: l.host_id
+   ->  Nested Loop  (cost=0.57..17265.20 rows=6195 width=8) (actual time=0.026..30.806 rows=6195 loops=1)
+         ->  Index Scan using calendar_summary_pkey on calendar_summary cs  (cost=0.29..581.27 rows=6195 width=8) (actual time=0.017..6.984 rows=6195 loops=1)
+               Filter: (availability_30 > 5)
+               Rows Removed by Filter: 3468
+         ->  Index Scan using idindex on listing l  (cost=0.29..2.68 rows=1 width=8) (actual time=0.003..0.003 rows=1 loops=6195)
+               Index Cond: (id = cs.listing_id)
+ Planning time: 0.596 ms
+ Execution time: 37.451 ms
+(10 rows)
+
+
+
+QUERY 6 w/o index: 17 ms w/index: 15 ms
+
+WITHOUT
+-------
+airbnb=> explain analyze SELECT avg(number_of_reviews)
+airbnb-> FROM Listing
+airbnb-> WHERE number_of_reviews > 0
+airbnb-> GROUP BY city;
+                                                               QUERY PLAN                                               
+-----------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=10000004961.80..10000005007.11 rows=21 width=39) (actual time=15.102..16.697 rows=16 loops=1)
+   Group Key: city
+   ->  Sort  (cost=10000004961.80..10000004976.82 rows=6007 width=11) (actual time=15.088..15.659 rows=6007 loops=1)
+         Sort Key: city
+         Sort Method: quicksort  Memory: 475kB
+         ->  Seq Scan on listing  (cost=10000000000.00..10000004584.79 rows=6007 width=11) (actual time=0.034..13.966 rows=6007 loops=1)
+               Filter: (number_of_reviews > 0)
+               Rows Removed by Filter: 3656
+ Planning time: 0.117 ms
+ Execution time: 16.751 ms
+(10 rows)
+
+WITH
+--------
+airbnb=> explain analyze SELECT avg(number_of_reviews)
+airbnb-> FROM Listing
+airbnb-> WHERE number_of_reviews > 0
+airbnb-> GROUP BY city;
+                                                             QUERY PLAN                                                 
+------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=0.29..5126.32 rows=21 width=39) (actual time=0.039..14.762 rows=16 loops=1)
+   Group Key: city
+   ->  Index Scan using cityindex on listing  (cost=0.29..5096.02 rows=6007 width=11) (actual time=0.026..13.870 rows=6007 loops=1)
+         Filter: (number_of_reviews > 0)
+         Rows Removed by Filter: 3656
+ Planning time: 0.135 ms
+ Execution time: 14.815 ms
+(7 rows)
