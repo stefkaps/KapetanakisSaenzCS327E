@@ -15,7 +15,7 @@ ORDER BY min(price) desc;
 # Retrieves Host id and averages the response rate of hosts by state that are below 75%
 SELECT avg(h.response_rate), l.host_id
 FROM Host h JOIN Listing l ON l.host_id = h.id
-GROUP BY l.state
+GROUP BY l.state, l.host_id
 HAVING avg(h.response_rate) <75;
 
 # Sums all prices of listings by date with prices > 0 
