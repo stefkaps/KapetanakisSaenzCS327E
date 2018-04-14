@@ -107,14 +107,14 @@ def run(argv=None):
 	
 	with beam.Pipeline(options=PipelineOptions()) as p:
 	
-		table_name = "utcs-spr2018:zillow.Rental_Price_1Bedroom" # format: project_id:dataset.table
+		table_name = "kapetanakissaenzcs327e:zillow.Rental_Price_1Bedroom" # format: project_id:dataset.table
 		table_schema = init_bigquery_table()
     
-		lines = p | 'ReadFile' >> beam.io.ReadFromText('gs://utcs-spr2018-datasets/zillow/no_header/Zip_MedianRentalPrice_1Bedroom.csv')
+		lines = p | 'ReadFile' >> beam.io.ReadFromText('gs://kapetanakissaenzcs327e1/zillow/Zip_MedianRentalPrice_1Bedroom.csv')
 	
 		list_records = lines | 'CreateListRecords' >> (beam.Map(parse_line))
         
-		list_records | 'WriteTmpFile1' >> beam.io.WriteToText('/home/shirley_cohen/code/tmp/list_records', file_name_suffix='.txt')
+		list_records | 'WriteTmpFile1' >> beam.io.WriteToText('/home/rsaenz8080/code/tuple_records', file_name_suffix='.txt')
 		
 		tuple_records = list_records | 'CreateTupleRecords' >> (beam.FlatMap(parse_records))
 		
@@ -122,7 +122,7 @@ def run(argv=None):
 	
 		bigquery_records = tuple_records | 'CreateBigQueryRecord' >> beam.Map(create_bigquery_record)
 	
-		bigquery_records | 'WriteTmpFile3' >> beam.io.WriteToText('/home/shirley_cohen/code/tmp/bq_records', file_name_suffix='.txt')
+		bigquery_records | 'WriteTmpFile3' >> beam.io.WriteToText('/home/rsaenz8080/code/bq_records', file_name_suffix='.txt')
 	
 		bigquery_records | 'WriteBigQuery' >> beam.io.Write(
 		    beam.io.BigQuerySink(

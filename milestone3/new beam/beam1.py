@@ -13,8 +13,8 @@ def parse_line(line):
 	
 with beam.Pipeline(options=PipelineOptions()) as p:
     
-	lines = p | 'ReadFile' >> beam.io.ReadFromText('gs://utcs-spr2018-datasets/zillow/no_header/Zip_MedianRentalPrice_1Bedroom.csv')
+	lines = p | 'ReadFile' >> beam.io.ReadFromText('gs://kapetanakissaenzcs327e1/zillow/Zip_MedianRentalPrice_1Bedroom.csv')
 	
 	zipcodes = lines | 'ParseZipcodes' >> (beam.Map(parse_line))
         
-	zipcodes | 'WriteFile' >> beam.io.WriteToText('/home/shirley_cohen/code/tmp/zipcodes', file_name_suffix='.txt')
+	zipcodes | 'WriteFile' >> beam.io.WriteToText('/home/rsaenz8080/code/zipcodes', file_name_suffix='.txt')

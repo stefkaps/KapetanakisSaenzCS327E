@@ -113,10 +113,10 @@ def run(argv=None):
 	known_args, pipeline_args = parser.parse_known_args(argv)
 	pipeline_args.extend([	
       '--runner=DataflowRunner', # use DataflowRunner to run on Dataflow or DirectRunner to run on local VM
-      '--project=utcs-spr2018', # change to your project_id
-      '--staging_location=gs://cs327e-dataflow/staging', # change to your bucket
-      '--temp_location=gs://cs327e-dataflow/tmp', # change to your bucket
-      '--job_name=rentals-1bedroom' # assign descriptive name to this job, all in lower case letters
+      '--project=kapetanakissaenzcs327e', # change to your project_id
+      '--staging_location=gs://kapetanakissaenzcs327e1/staging', # change to your bucket
+      '--temp_location=gs://kapetanakissaenzcs327e1/temp', # change to your bucket
+      '--job_name=zillow-rentals-1bedroom' # assign descriptive name to this job, all in lower case letters
 	])
 	
 	pipeline_options = PipelineOptions(pipeline_args)
@@ -124,22 +124,22 @@ def run(argv=None):
 	
 	with beam.Pipeline(options=pipeline_options) as p:
 	
-		table_name = "utcs-spr2018:zillow.Rental_Price_1Bedroom" # format: project_id:dataset.table
+		table_name = "kapetanakissaenzcs327e:zillow.Rental_Price_1Bedroom" # format: project_id:dataset.table
 		table_schema = init_bigquery_table()
     
-		lines = p | 'ReadFile' >> beam.io.ReadFromText('gs://utcs-spr2018-datasets/zillow/no_header/Zip_MedianRentalPrice_1Bedroom.csv')
+		lines = p | 'ReadFile' >> beam.io.ReadFromText('gs://kapetanakissaenzcs327e1/zillow/Zip_MedianRentalPrice_1Bedroom.csv')
 	
 		list_records = lines | 'CreateListRecords' >> (beam.Map(parse_line))
         
-		list_records | 'WriteTmpFile1' >> beam.io.WriteToText('gs://cs327e-dataflow/tmp/list_records', file_name_suffix='.txt')
+		list_records | 'WriteTmpFile1' >> beam.io.WriteToText('gs://kapetanakissaenzcs327e1/temp/tuple_records', file_name_suffix='.txt')
 	
 		tuple_records = list_records | 'CreateTupleRecords' >> (beam.FlatMap(parse_records))
 		
-		tuple_records | 'WriteTmpFile2' >> beam.io.WriteToText('gs://cs327e-dataflow/tmp/tuple_records', file_name_suffix='.txt')
+		tuple_records | 'WriteTmpFile2' >> beam.io.WriteToText('gs://kapetanakissaenzcs327e1/temp/tuple_records', file_name_suffix='.txt')
 
 		bigquery_records = tuple_records | 'CreateBigQueryRecord' >> beam.Map(create_bigquery_record)
 	
-		bigquery_records | 'WriteTmpFile3' >> beam.io.WriteToText('gs://cs327e-dataflow/tmp/bq_records', file_name_suffix='.txt')
+		bigquery_records | 'WriteTmpFile3' >> beam.io.WriteToText('gs://kapetanakissaenzcs327e1/temp/bq_records', file_name_suffix='.txt')
 	
 		bigquery_records | 'WriteBigQuery' >> beam.io.Write(
 		    beam.io.BigQuerySink(
