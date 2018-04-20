@@ -1,0 +1,5 @@
+for regions: read in each csv fil in variables (line1, line2,..., line5) then combine into one variable (lines) with beam.Flatten
+for parse line: only 1st 5 values
+	-when returning you return a list, so need to add random key values 
+	-output run a group bym.
+	-then need to create a function that seperates out the key & the value
