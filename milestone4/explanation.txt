@@ -1,0 +1,9 @@
+The first set of graphs shown, affordability, demonstrates the general affordability, 
+in terms of housing monthly cost, by number of bedrooms in each city.
+
+The second set of graphs displays the line graphs of Zillow monthly prices on average per month vs Airbnb average price per month 
+in 2016 Austin, demonstrating the relative lack of trend in the short term
+
+The third and final set of graphs shows the average crossover rate in Portland over time, demonstrating that starting in 2016 the average
+days per month needed for an airbnb to rent out in order to meet the same cost per month as Zillow decreased sharply from January 
+until June in 2016, and stagnated from there, potentially showing a self stabilizing effect
