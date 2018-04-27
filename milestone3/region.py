@@ -69,12 +69,9 @@ def parse_line(line):
 	metro = tokens[3]
 	county = tokens[4]
 	zipcode = int(zipcode_with_quotes.strip('"'));
-
-
 	temp.append((zipcode, city, state, metro, county))
-	if not set(temp).issubset(parsed_records):
+	if not (set(temp).issubset(parsed_records)):
 		parsed_records.append((zipcode, city, state, metro, county))	
-	
 	return parsed_records
 
 def parse_records(records):
@@ -106,7 +103,7 @@ def run(argv=None):
 		line4 = p | 'ReadFile4' >> beam.io.ReadFromText('gs://kapetanakissaenzcs327e1/zillow/Zip_MedianRentalPrice_4Bedroom.csv')
 		line5 = p | 'ReadFile5' >> beam.io.ReadFromText('gs://kapetanakissaenzcs327e1/zillow/Zip_MedianRentalPrice_5BedroomOrMore.csv')
 		
-		lines = ((line1,line2, line3, line4, line5) | 'CombineFile' >> beam.Flatten())
+		lines = ((line1, line2, line3, line4, line5) | 'CombineFile' >> beam.Flatten())
 	
 		list_records = lines | 'CreateListRecords' >> (beam.Map(parse_line))
         
