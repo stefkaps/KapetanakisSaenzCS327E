@@ -59,7 +59,7 @@ def create_bigquery_record(tuple):
 
 def parse_line(line): 
 	
-	temp_record = []
+	temp = []
 
 	tokens = line.split(",")
 
@@ -71,8 +71,8 @@ def parse_line(line):
 	zipcode = int(zipcode_with_quotes.strip('"'));
 
 
-	temp_record.append((zipcode, city, state, metro, county))
-	if not set(temp_record).issubset(parsed_records):
+	temp.append((zipcode, city, state, metro, county))
+	if not set(temp).issubset(parsed_records):
 		parsed_records.append((zipcode, city, state, metro, county))	
 	
 	return parsed_records
